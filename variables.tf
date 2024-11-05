@@ -44,6 +44,12 @@ variable "instance_memory" {
   description = "Объем памяти для ВМ в ГБ"
 }
 
+variable "instance_core_fraction" {
+  type        = number
+  default     = 100
+  description = "Гарантированная доля vCPU"
+}
+
 variable "instance_disk_size" {
   type        = number
   default     = 30

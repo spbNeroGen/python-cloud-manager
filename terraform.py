@@ -1,4 +1,5 @@
 import subprocess, os, uuid, shutil
+import threading
 from utils import *
 from color import Color
 from datetime import datetime
@@ -31,7 +32,7 @@ resource "yandex_compute_instance" "simple-vm" {
   resources {
     cores         = var.instance_cores
     memory        = var.instance_memory
-    core_fraction = 50
+    core_fraction = var.instance_core_fraction
   }
 
   boot_disk {
@@ -54,7 +55,7 @@ resource "yandex_compute_instance" "simple-vm" {
 """
 
 # Функция для копирования конфигурационных файлов и создания `main.tf` с переменными
-def generate_main_tf(working_dir, instance_name, instance_count, instance_cores, instance_memory, instance_disk_size):
+def generate_main_tf(working_dir, instance_name, instance_count, instance_cores, instance_memory, instance_core_fraction, instance_disk_size):
     # Копируем provider.tf и variables.tf и .terraformrc и cred.auto.tfvars  в рабочую директорию
     shutil.copy(SOURCE_PROVIDER_TF, working_dir)
     shutil.copy(SOURCE_VARIABLES_TF, working_dir)
@@ -71,6 +72,7 @@ def generate_main_tf(working_dir, instance_name, instance_count, instance_cores,
         f.write(f'instance_count = {instance_count}\n')
         f.write(f'instance_cores = {instance_cores}\n')
         f.write(f'instance_memory = {instance_memory}\n')
+        f.write(f'instance_core_fraction = {instance_core_fraction}\n')
         f.write(f'instance_disk_size = {instance_disk_size}\n')
 
 # Функция для выполнения команды Terraform
@@ -104,7 +106,7 @@ def terraform_destroy(working_dir):
         print(Color.RED + f'Ошибка при удалении конфигурации Terraform в директории {working_dir}.' + Color.END)
 
 # Создаем уникальную директорию для каждого вызова
-def create_vms(vm_count):
+def create_vms(vm_count, instance_cores, instance_memory, instance_core_fraction, instance_disk_size):
     unique_id = str(uuid.uuid4())[:8]
     working_dir = f'vms_{unique_id}'
     stop_event = threading.Event() # Для Выполняется \|/
@@ -117,7 +119,7 @@ def create_vms(vm_count):
         terraform_rc_path = os.path.join(absolute_path, ".terraformrc")
 
         # Генерируем конфигурацию Terraform
-        generate_main_tf(working_dir, unique_id, vm_count, 2, 3, 30)
+        generate_main_tf(working_dir, unique_id, vm_count, instance_cores, instance_memory, instance_core_fraction, instance_disk_size)
         print(Color.GREEN + f'\nДиректория хранения конфигурации и .tfstate создана: {absolute_path}' + Color.END)
 
         print(Color.YELLOW + f'Запускаем terraform init & apply' + Color.END)
@@ -132,7 +134,18 @@ def create_vms(vm_count):
 
         # Тестовая дополнительная информация
         creation_date = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
-        additional_info = {'status': 'test', 'creation_date': creation_date}
+        additional_info = {
+            'status': 'test', 
+            'creation_date': creation_date,
+            'resource_info': {  
+                'vm_count': vm_count,                       # Информация о ресурсах ВМ
+                'cpu': instance_cores,
+                'ram': instance_memory,
+                'cpu_fraction': instance_core_fraction,
+                'disk_size': instance_disk_size
+                }
+            }
+        # generate_vm_data_from_tfstate(working_dir)
         add_vm_data(unique_id, vm_count, absolute_path, additional_info) 
         print(Color.GREEN + f'\nФайл информации о созданных ВМ обновлен!' + Color.END)
 
