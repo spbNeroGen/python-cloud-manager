@@ -52,6 +52,10 @@ resource "yandex_compute_instance" "simple-vm" {
     ssh-keys = "ubuntu:${file("../id_ed25519.pub")}"
   }
 }
+
+output "instance_ips" {
+  value = yandex_compute_instance.simple-vm[*].network_interface[0].nat_ip_address
+}
 """
 
 # Функция для копирования конфигурационных файлов и создания `main.tf` с переменными
@@ -105,6 +109,24 @@ def terraform_destroy(working_dir):
     except subprocess.CalledProcessError:
         print(Color.RED + f'Ошибка при удалении конфигурации Terraform в директории {working_dir}.' + Color.END)
 
+def get_instance_ips(working_dir):
+    # Выполняем terraform output для получения выходных данных
+    output_command = "terraform output -json"
+    output_result = subprocess.run(output_command, shell=True, cwd=working_dir, capture_output=True, text=True)
+    # Проверяем, что вывод не пустой
+    if output_result.returncode != 0:
+        raise RuntimeError(f"Ошибка выполнения команды: {output_result.stderr}")
+    # Загружаем JSON
+    try:
+        outputs = json.loads(output_result.stdout)
+    except json.JSONDecodeError as e:
+        raise ValueError("Ошибка при декодировании JSON: " + str(e))
+    # Проверяем, что ключ "instance_ips" существует
+    if "instance_ips" in outputs and "value" in outputs["instance_ips"]:
+        return outputs["instance_ips"]["value"]
+    else:
+        raise KeyError("Ключ 'instance_ips' не найден в выходных данных Terraform.")
+
 # Создаем уникальную директорию для каждого вызова
 def create_vms(vm_count, instance_cores, instance_memory, instance_core_fraction, instance_disk_size):
     unique_id = str(uuid.uuid4())[:8]
@@ -131,7 +153,9 @@ def create_vms(vm_count, instance_cores, instance_memory, instance_core_fraction
         # Инициализируем и применяем Terraform
         terraform_init(working_dir)
         terraform_apply(working_dir)
-
+        # Получаем IP-адреса после terraform apply
+        instance_ips = get_instance_ips(working_dir)
+        
         # Тестовая дополнительная информация
         creation_date = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
         additional_info = {
@@ -142,7 +166,8 @@ def create_vms(vm_count, instance_cores, instance_memory, instance_core_fraction
                 'cpu': instance_cores,
                 'ram': instance_memory,
                 'cpu_fraction': instance_core_fraction,
-                'disk_size': instance_disk_size
+                'disk_size': instance_disk_size,
+                'ip_addresses': instance_ips
                 }
             }
         # generate_vm_data_from_tfstate(working_dir)

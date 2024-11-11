@@ -6,10 +6,11 @@ def main_menu():
         print(Color.DARKCYAN + '\n--------------------------------------------------' + Color.END)
         print(Color.YELLOW + 'Выберите вариант:' + Color.END)
         print(Color.GREEN + '1. ' + Color.END + 'Просмотр созданных ВМ')
-        print(Color.GREEN + '2. ' + Color.END + 'Создать ВМ - Ubuntu-2204(2-4-30)')
-        print(Color.GREEN + '3. ' + Color.END + 'Создать ВМ - Custom')
-        print(Color.GREEN + '4. ' + Color.END + 'Удалить ВМ')
-        print(Color.GREEN + '5. ' + Color.END + 'Выход')
+        print(Color.GREEN + '2. ' + Color.END + 'Создать ВМ - Simple Ubuntu-22-04 (params. 2-4-30)')
+        print(Color.GREEN + '3. ' + Color.END + 'Создать ВМ - Simple Custom')
+        print(Color.GREEN + '4. ' + Color.END + 'Создать ВМ - Roles')
+        print(Color.GREEN + '5. ' + Color.END + 'Удалить ВМ')
+        print(Color.GREEN + '6. ' + Color.END + 'Выход')
 
         choice = input('\nВведите номер варианта: ')
         
@@ -74,7 +75,6 @@ def main_menu():
                         ]
                     )
 
-
                     print(valid_combinations_message) 
 
                     # Максимально значения для hdd
@@ -101,8 +101,10 @@ def main_menu():
                 except ValueError:
                     print(Color.RED + '\nОшибка: необходимо ввести числовое значение. Попробуйте снова.' + Color.END)
                     print(Color.YELLOW + 'Чтобы вернуться на главное меню нажмите: 0' + Color.END)
-
         elif choice == '4':
+            create_vm_roles()
+
+        elif choice == '5':
             unique_id = input('\nВведите уникальный ID для удаления: ')
             working_dir = f'vms_{unique_id}'
             
@@ -119,7 +121,7 @@ def main_menu():
             else:
                 print(Color.RED + f'\nВМ с ID {unique_id} не найдены.' + Color.END)
 
-        elif choice == '5':
+        elif choice == '6':
             print(Color.BLUE + '\nУдачи путник...' + Color.END)
             break
 
