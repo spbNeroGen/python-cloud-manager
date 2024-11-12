@@ -32,6 +32,7 @@
 - Yandex Cloud
 
 ## Предварительные требования
+
 1. Аккаунт в Yandex Cloud.
 2. Установленный [Terraform](https://yandex.cloud/ru/docs/tutorials/infrastructure-management/terraform-quickstart).
 3. Установленный [Yandex Cloud CLI](https://cloud.yandex.ru/docs/cli/quickstart).

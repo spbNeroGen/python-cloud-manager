@@ -198,4 +198,5 @@ override.tf.json
 notes.md
 /vms*
 id_ed25519.pub
+id_ed25519
 /ansible

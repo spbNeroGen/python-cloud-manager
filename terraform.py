@@ -128,7 +128,7 @@ def get_instance_ips(working_dir):
         raise KeyError("Ключ 'instance_ips' не найден в выходных данных Terraform.")
 
 # Создаем уникальную директорию для каждого вызова
-def create_vms(vm_count, instance_cores, instance_memory, instance_core_fraction, instance_disk_size):
+def create_vms(vm_count, instance_cores, instance_memory, instance_core_fraction, instance_disk_size, instance_roles):
     unique_id = str(uuid.uuid4())[:8]
     working_dir = f'vms_{unique_id}'
     stop_event = threading.Event() # Для Выполняется \|/
@@ -159,7 +159,7 @@ def create_vms(vm_count, instance_cores, instance_memory, instance_core_fraction
         # Тестовая дополнительная информация
         creation_date = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
         additional_info = {
-            'status': 'test', 
+            'roles': instance_roles, 
             'creation_date': creation_date,
             'resource_info': {  
                 'vm_count': vm_count,                       # Информация о ресурсах ВМ
@@ -188,7 +188,13 @@ def create_vms(vm_count, instance_cores, instance_memory, instance_core_fraction
         # Останавливаем анимацию
         stop_event.set()
         thread.join() 
-
+    # Ожидание 60 сек + запуск Ansible Playbook для каждой ВМ
+    if instance_roles != 'None':
+        print(Color.GREEN + f'\nИдет установка роли: ' + instance_roles + Color.END)
+        time.sleep(60)
+        for ip in instance_ips:
+            run_ansible_playbook(ip, instance_roles + '_playbook.yml', 'playbooks')
+            
 def destroy_vms(working_dir):
     try:
         print(f'\nУдаляем {working_dir}...')

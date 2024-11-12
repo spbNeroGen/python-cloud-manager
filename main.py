@@ -11,7 +11,7 @@ def main_menu():
         print(Color.GREEN + '4. ' + Color.END + 'Создать ВМ - Roles')
         print(Color.GREEN + '5. ' + Color.END + 'Удалить ВМ')
         print(Color.GREEN + '6. ' + Color.END + 'Выход')
-
+        # print(Color.GREEN + '7. ' + Color.END + 'TEST')
         choice = input('\nВведите номер варианта: ')
         
         if choice == '1':
@@ -32,7 +32,7 @@ def main_menu():
                         print(Color.YELLOW + '\nНу и ладно :)' + Color.END)
                         break
                     else:
-                        create_vms(number_of_vms, 2, 4, 100, 30)
+                        create_vms(number_of_vms, 2, 4, 100, 30, 'None')
                         break
                 except ValueError:
                     print(Color.RED + '\nОшибка: необходимо ввести числовое значение. Попробуйте снова.' + Color.END)
@@ -96,13 +96,31 @@ def main_menu():
                         print(Color.RED + '\nОшибка: недопустимое значение объема HDD. Попробуйте снова.' + Color.END)
                         continue
                     
-                    create_vms(number_of_vms, cpu, ram, cpu_fraction, hdd)
+                    create_vms(number_of_vms, cpu, ram, cpu_fraction, hdd, 'None')
                     break
                 except ValueError:
                     print(Color.RED + '\nОшибка: необходимо ввести числовое значение. Попробуйте снова.' + Color.END)
                     print(Color.YELLOW + 'Чтобы вернуться на главное меню нажмите: 0' + Color.END)
         elif choice == '4':
-            create_vm_roles()
+                roles = {
+                "1": {"name": "web_server", "cpu": 2, "ram": 4, "disk_size": 50, "count": 1},
+                "2": {"name": "test-server", "cpu": 4, "ram": 8, "disk_size": 50, "count": 1},
+                "3": {"name": "test-server2", "cpu": 2, "ram": 4, "disk_size": 30, "count": 1}
+                }
+
+                print(Color.YELLOW + "\nДоступные роли для создания ВМ:" + Color.END)
+                for role_id, role in roles.items():
+                    print(f"{Color.GREEN}{role_id}. {Color.END}{Color.UNDERLINE}{role['name']}{Color.END} - {Color.CYAN}CPU{Color.END}: {role['cpu']} vCPU, {Color.GREEN}RAM{Color.END}: {role['ram']} ГБ, {Color.YELLOW}Диск{Color.END}: {role['disk_size']} ГБ")
+
+                role_choice = input('\nВведите номер роли: ')
+                if role_choice not in roles:
+                    print(Color.RED + "\nОшибка: неверный выбор роли. Попробуйте снова." + Color.END)
+                    return
+
+                role = roles[role_choice]
+                print(f"\nСоздание ВМ с ролью {Color.CYAN}{role['name']}{Color.END}...")
+
+                create_vms(role["count"], role["cpu"], role["ram"], 100, role["disk_size"], role["name"])
 
         elif choice == '5':
             unique_id = input('\nВведите уникальный ID для удаления: ')
@@ -124,7 +142,10 @@ def main_menu():
         elif choice == '6':
             print(Color.BLUE + '\nУдачи путник...' + Color.END)
             break
-
+        # TEST
+        # elif choice == '7':
+        #     run_ansible_playbook('51.250.15.161', 'web_server_playbook.yml', 'playbooks')
+        #     break
         else:
             print(Color.RED + '\nНекорректный вариант, попробуйте снова.' + Color.END)
 

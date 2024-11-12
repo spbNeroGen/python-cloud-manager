@@ -1,7 +1,7 @@
-import os, json
+import os, json, time, subprocess
+
 from color import Color
 from datetime import datetime
-import time
 
 VM_DATA_FILE = 'vm_data.json'
 
@@ -30,7 +30,7 @@ def display_vm_data():
         print(f'    {Color.GREEN}Количество ВМ: {details.get("count", "N/A")}' + Color.END)
         print(f'    {Color.GREEN}Директория: {details.get("directory", "N/A")}' + Color.END)
         print(f'    Дополнительная информация:')
-        print(f'        {Color.PURPLE}Статус: {additional_info.get("status", "N/A")}' + Color.END)
+        print(f'        {Color.PURPLE}Роль: {additional_info.get("roles", "N/A")}' + Color.END)
         print(f'        {Color.PURPLE}Дата создания: {additional_info.get("creation_date", "N/A")}' + Color.END)
         print(f'        Информация о ресурсах:')
         print(f'            {Color.BLUE}Количество ВМ: {resource_info.get("vm_count", "N/A")}' + Color.END)
@@ -79,54 +79,29 @@ def loading_animation(stop_event):
             print(f'\r{symbol} Выполняется... ', end='', flush=True)
             time.sleep(0.1)
 
-# def generate_vm_data_from_tfstate(working_dir):
-#     pass
-
-####################### Функция для создания ВМ на основе ролей #################
-def create_vm_roles():
-    # Выбор роли
-    roles = {
-        "1": ("Web Server", [(2, 4, 50), (4, 8, 100)]),
-        "2": ("Jenkins Master", [(4, 8, 50), (8, 16, 100)]),
-        "3": ("Database Server", [(4, 8, 100), (8, 16, 200)]),
-    }
-    
-    print("\nВыберите роль для новой ВМ:")
-    for key, (role_name, _) in roles.items():
-        print(f"{key}. {role_name}")
-
-    role_choice = input("Введите номер роли: ")
-    if role_choice not in roles:
-        print("Некорректный выбор роли. Попробуйте снова.")
-        return
-
-    # Выбор характеристик для выбранной роли
-    role_name, configurations = roles[role_choice]
-    print(f"\nВы выбрали роль: {role_name}. Выберите конфигурацию:")
-    for index, (cpu, ram, disk) in enumerate(configurations, start=1):
-        print(f"{index}. CPU: {cpu} cores, RAM: {ram} GB, Disk: {disk} GB")
-
-    config_choice = input("Введите номер конфигурации: ")
-    try:
-        selected_config = configurations[int(config_choice) - 1]
-    except (IndexError, ValueError):
-        print("Некорректный выбор конфигурации. Попробуйте снова.")
-        return
-
-    cpu, ram, disk = selected_config
-    print(f"\nСоздание ВМ с параметрами - Роль: {role_name}, CPU: {cpu}, RAM: {ram}, Disk: {disk} GB")
-    
-    # логика для запуска процесса создания ВМ с выбранными параметрами
-    create_vm_with_role(role_name, cpu, ram, disk)
-
-def create_vm_with_role(role, cpu, ram, disk):
-    # Логика создания ВМ с заданными характеристиками
-    ip_address = "192.168.1.11" 
-    update_inventory(role, ip_address)
-    print(f"Создание ВМ с ролью '{role}' и характеристиками: CPU={cpu}, RAM={ram}GB, Disk={disk}GB")
-    # потом сюда вызов Ansible playbook
-
-
-####################### тестово for ansible ################################
-def update_inventory(role, ip_address):
-    pass
+# Функция для запуска Ansible Playbook
+def run_ansible_playbook(ip_address, playbook, playbooks_dir):
+    # current_directory = os.getcwd()
+    # print(f"Текущая рабочая директория: {current_directory}")
+    user = 'ubuntu'
+    playbook_path = os.path.join(playbooks_dir, playbook)
+    #command = f"ansible-playbook -i {user}@{ip_address}, {playbook_path} --private-key id_ed25519 --ssh-common-args='-o StrictHostKeyChecking=no' --become --become-user=root"
+    command = [
+        "ansible-playbook",
+        "-i", f"{user}@{ip_address},",
+        playbook_path,
+        "--private-key", "id_ed25519",
+        "--ssh-common-args='-o StrictHostKeyChecking=no'",
+        "--become",
+        "--become-user", "root"
+    ]
+    print(command)
+    result = subprocess.run(command, capture_output=True, text=True)
+    print("stdout:", result.stdout)  # Вывод stdout
+    print("stderr:", result.stderr)  # Вывод stderr
+    if result.returncode != 0:
+        print(f"Установка роли завершилась с ошибкой: {result.returncode}")
+        raise subprocess.CalledProcessError(result.returncode, command)
+    else:
+        print("Установка роли выполнена успешно!")
+        
