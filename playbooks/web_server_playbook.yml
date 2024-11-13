@@ -12,3 +12,30 @@
         name: nginx
         state: started
         enabled: true
+
+    - name: Create a test HTML page
+      copy:
+        dest: /var/www/html/index.html
+        content: |
+          <html>
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Test Page roles Web_server</title>
+          </head>
+          <body>
+              <h1>Welcome to the Nginx Server!</h1>
+              <p>This is a test page of roles </p>
+          </body>
+          </html>
+
+    - name: Test Nginx configuration
+      command: nginx -t
+      register: nginx_test
+      ignore_errors: yes
+
+    - name: Reload Nginx if configuration is correct
+      systemd:
+        name: nginx
+        state: reloaded
+      when: nginx_test.rc == 0

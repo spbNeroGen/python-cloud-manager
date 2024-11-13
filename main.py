@@ -104,8 +104,9 @@ def main_menu():
         elif choice == '4':
                 roles = {
                 "1": {"name": "web_server", "cpu": 2, "ram": 4, "disk_size": 50, "count": 1},
-                "2": {"name": "test-server", "cpu": 4, "ram": 8, "disk_size": 50, "count": 1},
-                "3": {"name": "test-server2", "cpu": 2, "ram": 4, "disk_size": 30, "count": 1}
+                "2": {"name": "docker_test", "cpu": 4, "ram": 8, "disk_size": 50, "count": 1},
+                "3": {"name": "nexus_docker_test", "cpu": 4, "ram": 8, "disk_size": 50, "count": 1},
+                "4": {"name": "prom_stack", "cpu": 4, "ram": 8, "disk_size": 50, "count": 1}
                 }
 
                 print(Color.YELLOW + "\nДоступные роли для создания ВМ:" + Color.END)
